@@ -358,6 +358,11 @@ impl InputMessage {
         }
     }
 
+    pub fn set_text<T: AsRef<str>>(mut self, s: T) -> Self {
+        self.text = s.as_ref().to_string();
+        self
+    }
+
     /// Builds a new message from the given markdown-formatted string as the
     /// message contents and entities.
     ///
