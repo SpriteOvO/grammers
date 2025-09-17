@@ -169,6 +169,26 @@ fn write_common_field_impl<W: Write>(
             )?;
         }
         writeln!(file, "{indent}        }}\n{indent}    }}")?;
+
+        writeln!(
+            file,
+            "{}    pub fn {}_mut(&mut self) -> &mut {} {{\n{}        match self {{",
+            indent,
+            rustifier::parameters::attr_name(param),
+            qual_name,
+            indent,
+        )?;
+        // Match cases
+        for d in definitions {
+            writeln!(
+                file,
+                "{}            Self::{}(i) => &mut i.{},",
+                indent,
+                rustifier::definitions::variant_name(d),
+                rustifier::parameters::attr_name(param),
+            )?;
+        }
+        writeln!(file, "{indent}        }}\n{indent}    }}")?;
     }
     writeln!(file, "{indent}}}")?;
     Ok(())
