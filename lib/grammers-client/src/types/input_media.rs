@@ -21,8 +21,69 @@ pub struct InputMedia {
 }
 
 impl InputMedia {
+    /// Creates a new empty media message for input.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Replaces the plaintext in the message.
+    ///
+    /// <div class="warning">
+    /// Note that this method does not modify formatting entities, which may break
+    /// formatting or cause out-of-bounds errors if entities does not match the given
+    /// text.
+    /// <br><br>
+    ///
+    /// The caller must ensure that formatting entities remain valid for the given text.
+    /// If you need to update formatting entities, call method
+    /// [`InputMedia::fmt_entities`].
+    /// </div>
+    pub fn caption<T>(mut self, s: T) -> Self
+    where
+        T: Into<String>,
+    {
+        self.caption = s.into();
+        self
+    }
+
     /// The formatting entities within the caption (such as bold, italics, etc.).
     pub fn fmt_entities(mut self, entities: Vec<tl::enums::MessageEntity>) -> Self {
+        self.entities = entities;
+        self
+    }
+
+    /// Builds a new media from the given markdown-formatted string as the
+    /// caption contents and entities.
+    ///
+    /// Note that Telegram only supports a very limited subset of entities:
+    /// bold, italic, underline, strikethrough, code blocks, pre blocks and inline links (inline
+    /// links with this format `tg://user?id=12345678` will be replaced with inline mentions when
+    /// possible).
+    #[cfg(feature = "markdown")]
+    pub fn markdown<T>(mut self, s: T) -> Self
+    where
+        T: AsRef<str>,
+    {
+        let (caption, entities) = crate::parsers::parse_markdown_message(s.as_ref());
+        self.caption = caption;
+        self.entities = entities;
+        self
+    }
+
+    /// Builds a new media from the given HTML-formatted string as the
+    /// caption contents and entities.
+    ///
+    /// Note that Telegram only supports a very limited subset of entities:
+    /// bold, italic, underline, strikethrough, code blocks, pre blocks and inline links (inline
+    /// links with this format `tg://user?id=12345678` will be replaced with inline mentions when
+    /// possible).
+    #[cfg(feature = "html")]
+    pub fn html<T>(mut self, s: T) -> Self
+    where
+        T: AsRef<str>,
+    {
+        let (caption, entities) = crate::parsers::parse_html_message(s.as_ref());
+        self.caption = caption;
         self.entities = entities;
         self
     }
@@ -244,48 +305,6 @@ impl InputMedia {
             mime.essence_str().to_string()
         } else {
             "application/octet-stream".to_string()
-        }
-    }
-
-    /// Builds a new media using the given plaintext as the caption contents.
-    pub fn caption<T: AsRef<str>>(s: T) -> Self {
-        Self {
-            caption: s.as_ref().to_string(),
-            ..Self::default()
-        }
-    }
-
-    /// Builds a new media from the given markdown-formatted string as the
-    /// caption contents and entities.
-    ///
-    /// Note that Telegram only supports a very limited subset of entities:
-    /// bold, italic, underline, strikethrough, code blocks, pre blocks and inline links (inline
-    /// links with this format `tg://user?id=12345678` will be replaced with inline mentions when
-    /// possible).
-    #[cfg(feature = "markdown")]
-    pub fn markdown<T: AsRef<str>>(s: T) -> Self {
-        let (caption, entities) = crate::parsers::parse_markdown_message(s.as_ref());
-        Self {
-            caption,
-            entities,
-            ..Self::default()
-        }
-    }
-
-    /// Builds a new media from the given HTML-formatted string as the
-    /// caption contents and entities.
-    ///
-    /// Note that Telegram only supports a very limited subset of entities:
-    /// bold, italic, underline, strikethrough, code blocks, pre blocks and inline links (inline
-    /// links with this format `tg://user?id=12345678` will be replaced with inline mentions when
-    /// possible).
-    #[cfg(feature = "html")]
-    pub fn html<T: AsRef<str>>(s: T) -> Self {
-        let (caption, entities) = crate::parsers::parse_html_message(s.as_ref());
-        Self {
-            caption,
-            entities,
-            ..Self::default()
         }
     }
 }
